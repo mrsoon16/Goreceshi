@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ثبت‌نام کاربران</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f5f5f5; margin-top: 50px; }
+    input, button { font-size: 1.2em; padding: 10px; margin: 10px; }
+    #admin-panel { display: none; margin-top: 30px; }
+    .user-entry { margin: 5px 0; font-size: 1.1em; }
+  </style>
+</head>
+<body>
+  <h2>فرم ثبت‌نام</h2>
+  <input type="text" id="nameInput" placeholder="نام شما"/>
+  <br/>
+  <button onclick="register()">ثبت‌نام</button>
+  <br/><br/>
+  <input type="password" id="adminPass" placeholder="رمز ادمین"/>
+  <button onclick="checkAdmin()">ورود ادمین</button>
+
+  <div id="admin-panel">
+    <h3>لیست کاربران ثبت‌نام‌شده</h3>
+    <div id="userList"></div>
+    <button onclick="clearList()">پاک‌کردن لیست</button>
+  </div>
+
+  <script>
+    const maxUsers = 50;
+    const adminCode = "1616";
+    const userAgent = navigator.userAgent;
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("userList") || "[]");
+    }
+
+    function saveUsers(list) {
+      localStorage.setItem("userList", JSON.stringify(list));
+    }
+
+    function hashDevice() {
+      return btoa(userAgent).slice(0, 50); // unique ID for device
+    }
+
+    function register() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) return alert("نام را وارد کنید!");
+
+      const deviceId = hashDevice();
+      const users = getUsers();
+
+      if (users.find(u => u.device === deviceId)) {
+        return alert("شما قبلاً ثبت‌نام کرده‌اید!");
+      }
+
+      if (users.length >= maxUsers) {
+        return alert("ظرفیت ثبت‌نام تکمیل شده است.");
+      }
+
+      users.push({ name, device: deviceId });
+      saveUsers(users);
+      alert("ثبت‌نام با موفقیت انجام شد!");
+    }
+
+    function checkAdmin() {
+      const pass = document.getElementById("adminPass").value;
+      if (pass === adminCode) {
+        const panel = document.getElementById("admin-panel");
+        const userList = document.getElementById("userList");
+        userList.innerHTML = "";
+        getUsers().forEach((u, i) => {
+          userList.innerHTML += `<div class='user-entry'>${i+1}. ${u.name}</div>`;
+        });
+        panel.style.display = "block";
+      } else {
+        alert("رمز اشتباه است!");
+      }
+    }
+
+    function clearList() {
+      if (confirm("آیا مطمئن هستید؟")) {
+        localStorage.removeItem("userList");
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
